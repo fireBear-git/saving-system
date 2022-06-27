@@ -1,13 +1,12 @@
-using System.Collections;
-using System.Collections.Generic;
 using System.IO;
+using UnityEditor;
 using UnityEngine;
 
 [CreateAssetMenu(menuName = "Saving System/Create SavedData", fileName = "SavedData")]
 public class SavedData : ScriptableObject
 {
     [Header("Fields")]
-    [SerializeField] private string _fileName;
+    [SerializeField] private string _fileName = "DataSaved";
     
     [Header("Dipendencies")]
     [SerializeField] private ScriptableData[] _scriptableDatas;
@@ -62,4 +61,39 @@ public class SavedData : ScriptableObject
         JsonUtility.FromJsonOverwrite(json, this);
         Overwrite();
     }
+
+#if UNITY_EDITOR
+
+    public void ReloadScriptableDatas(ScriptableObject[] scriptableObjects)
+    {
+        string jsonCheck;
+        ScriptableData check = null;
+        ScriptableData[] tempData = new ScriptableData[scriptableObjects.Length];
+
+        for (int i = 0; i < scriptableObjects.Length; i++)
+        {
+            tempData[i] = new ScriptableData(scriptableObjects[i]);
+
+            check = ArrayUtility.Find(_scriptableDatas, data => data.scriptableObject == scriptableObjects[i]);
+
+            if (check == null)
+                continue;
+
+            jsonCheck = ((ScriptableData)check).json;
+
+            if (jsonCheck == "")
+                continue;
+
+            tempData[i].SetJson(jsonCheck);
+        }
+
+        _scriptableDatas = tempData;
+    }
+
+    public void ClearScriptableDatas()
+    {
+        _scriptableDatas = new ScriptableData[0];
+    }
+
+#endif
 }
